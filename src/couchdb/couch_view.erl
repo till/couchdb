@@ -71,10 +71,6 @@ get_group(Db, GroupId, Stale) ->
     end,
     Result.
 
-% this taken off the intarweb and should be moved to an utility class
-is_string(S) ->
-    length(lists:dropwhile(fun (C) when is_integer(C) -> true; (_) -> false end, S)) =:= 0.
-
 % This function attempts to find a view's directory in [till_view] if the user
 % supplied one. If all fails it returns the view_index_dir (default).
 get_view_dir(DbName) ->
