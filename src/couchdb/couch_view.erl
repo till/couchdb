@@ -273,6 +273,7 @@ fold(#view{btree=Btree}, Fun, Acc, Options) ->
 
 init([]) ->
     % read configuration settings and register for configuration changes
+    % the following line breaks my codez
     RootDir = get_view_dir('foo'),
     Self = self(),
     ok = couch_config:register(
