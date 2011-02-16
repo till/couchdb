@@ -115,8 +115,6 @@ cleanup_index_files(Db) ->
 list_index_files(Db) ->
     % call server to fetch the index files
     RootDir = get_view_dir(couch_db:name(Db)),
-    ?LOG_DEBUG("RootDir ~s, Db ~p, couch_db:name ~s, foo: ~s",
-        [RootDir, Db, couch_db:name(Db), RootDir ++ "/." ++ ?b2l(couch_db:name(Db)) ++ "_design"++"/*"]),
     filelib:wildcard(RootDir ++ "/." ++ ?b2l(couch_db:name(Db)) ++ "_design"++"/*").
 
 
@@ -264,8 +262,7 @@ fold(#view{btree=Btree}, Fun, Acc, Options) ->
 
 init([]) ->
     % read configuration settings and register for configuration changes
-    % the following line breaks my codez
-    RootDir = get_view_dir('foo'),
+    RootDir = get_view_dir(""),
     Self = self(),
     ok = couch_config:register(
         fun("couchdb", "view_index_dir")->
