@@ -71,12 +71,20 @@ get_group(Db, GroupId, Stale) ->
     end,
     Result.
 
+% this taken off the intarweb and should be moved to an utility class
+is_string(S) ->
+    length(lists:dropwhile(fun (C) when is_integer(C) -> true; (_) -> false end, S)) =:= 0.
+
 % This function attempts to find a view's directory in [till_view] if the user
 % supplied one. If all fails it returns the view_index_dir (default).
-get_view_dir(ViewFile) ->
-    ?LOG_DEBUG("get_view_dir for file ~s", [ViewFile]),
+get_view_dir(Db) ->
+    DbName = case is_string(Db) of
+        true -> Db;
+        false -> couch_db:name(Db)
+    end,
+    ?LOG_DEBUG("ZOOOOOOOOOOOOOOOOOOMNNNNNNNNGGG !!!! view dir for database ~s", [DbName]),
     couch_config:get(
-        "till_view", "foo", couch_config:get(
+        "till_view", "view_" ++ DbName, couch_config:get(
             "couchdb", "view_index_dir")).
 
 get_temp_group(Db, Language, DesignOptions, MapSrc, RedSrc) ->
@@ -109,13 +117,15 @@ cleanup_index_files(Db) ->
               re:run(FilePath, RegExp, [{capture, none}]) =:= nomatch],
     % delete unused files
     ?LOG_DEBUG("deleting unused view index files: ~p",[DeleteFiles]),
-    [couch_file:delete(get_view_dir(File),File,false)||File <- DeleteFiles],
+    [couch_file:delete(get_view_dir(Db),File,false)||File <- DeleteFiles],
     ok.
 
 % TODO: need to rework this with per view directories
 list_index_files(Db) ->
     % call server to fetch the index files
-    RootDir = get_view_dir('foo'),
+    RootDir = get_view_dir(Db),
+    ?LOG_DEBUG("RootDir ~s, Db ~p, couch_db:name ~s, foo: ~s",
+        [RootDir, Db, couch_db:name(Db), RootDir ++ "/." ++ ?b2l(couch_db:name(Db)) ++ "_design"++"/*"]),
     filelib:wildcard(RootDir ++ "/." ++ ?b2l(couch_db:name(Db)) ++ "_design"++"/*").
 
 
@@ -339,7 +349,7 @@ do_reset_indexes(DbName, Root) ->
             delete_from_ets(Pid, DbName, Sig)
         end, Names),
     delete_index_dir(Root, DbName),
-    RootDelDir = get_view_dir('foo'),
+    RootDelDir = get_view_dir(DbName),
     couch_file:delete(RootDelDir, Root ++ "/." ++ ?b2l(DbName) ++ "_temp").
 
 handle_info({'EXIT', FromPid, Reason}, Server) ->
