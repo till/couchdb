@@ -71,12 +71,12 @@ get_group(Db, GroupId, Stale) ->
     end,
     Result.
 
-% This function attempts to find a view's directory in [till_view] if the user
+% This function attempts to find a view's directory in [view_storage] if the user
 % supplied one. If all fails it returns the view_index_dir (default).
 get_view_dir(DbName) ->
     ?LOG_DEBUG("ZOOOOOOOOOOOOOOOOOOMNNNNNNNNGGG !!!! view dir for database ~s", [DbName]),
     couch_config:get(
-        "till_view", "view_" ++ DbName, couch_config:get(
+        "view_storage", "view_" ++ DbName, couch_config:get(
             "couchdb", "view_index_dir")).
 
 get_temp_group(Db, Language, DesignOptions, MapSrc, RedSrc) ->
