@@ -71,6 +71,14 @@ get_group(Db, GroupId, Stale) ->
     end,
     Result.
 
+% This function attempts to find a view's directory in [till_view] if the user
+% supplied one. If all fails it returns the view_index_dir (default).
+get_view_dir(ViewFile) ->
+    ?LOG_DEBUG("get_view_dir for file ~s", [ViewFile]),
+    couch_config:get(
+        "till_view", "foo", couch_config:get(
+            "couchdb", "view_index_dir")).
+
 get_temp_group(Db, Language, DesignOptions, MapSrc, RedSrc) ->
     couch_view_group:request_group(
         get_temp_updater(couch_db:name(Db), Language, DesignOptions, MapSrc, RedSrc),
@@ -101,13 +109,13 @@ cleanup_index_files(Db) ->
               re:run(FilePath, RegExp, [{capture, none}]) =:= nomatch],
     % delete unused files
     ?LOG_DEBUG("deleting unused view index files: ~p",[DeleteFiles]),
-    RootDir = couch_config:get("couchdb", "view_index_dir"),
-    [couch_file:delete(RootDir,File,false)||File <- DeleteFiles],
+    [couch_file:delete(get_view_dir(File),File,false)||File <- DeleteFiles],
     ok.
 
+% TODO: need to rework this with per view directories
 list_index_files(Db) ->
     % call server to fetch the index files
-    RootDir = couch_config:get("couchdb", "view_index_dir"),
+    RootDir = get_view_dir('foo'),
     filelib:wildcard(RootDir ++ "/." ++ ?b2l(couch_db:name(Db)) ++ "_design"++"/*").
 
 
@@ -255,7 +263,7 @@ fold(#view{btree=Btree}, Fun, Acc, Options) ->
 
 init([]) ->
     % read configuration settings and register for configuration changes
-    RootDir = couch_config:get("couchdb", "view_index_dir"),
+    RootDir = get_view_dir('foo'),
     Self = self(),
     ok = couch_config:register(
         fun("couchdb", "view_index_dir")->
@@ -331,7 +339,7 @@ do_reset_indexes(DbName, Root) ->
             delete_from_ets(Pid, DbName, Sig)
         end, Names),
     delete_index_dir(Root, DbName),
-    RootDelDir = couch_config:get("couchdb", "view_index_dir"),
+    RootDelDir = get_view_dir('foo'),
     couch_file:delete(RootDelDir, Root ++ "/." ++ ?b2l(DbName) ++ "_temp").
 
 handle_info({'EXIT', FromPid, Reason}, Server) ->
