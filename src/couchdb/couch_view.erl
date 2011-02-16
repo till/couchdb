@@ -77,11 +77,7 @@ is_string(S) ->
 
 % This function attempts to find a view's directory in [till_view] if the user
 % supplied one. If all fails it returns the view_index_dir (default).
-get_view_dir(Db) ->
-    DbName = case is_string(Db) of
-        true -> Db;
-        false -> couch_db:name(Db)
-    end,
+get_view_dir(DbName) ->
     ?LOG_DEBUG("ZOOOOOOOOOOOOOOOOOOMNNNNNNNNGGG !!!! view dir for database ~s", [DbName]),
     couch_config:get(
         "till_view", "view_" ++ DbName, couch_config:get(
@@ -117,12 +113,12 @@ cleanup_index_files(Db) ->
               re:run(FilePath, RegExp, [{capture, none}]) =:= nomatch],
     % delete unused files
     ?LOG_DEBUG("deleting unused view index files: ~p",[DeleteFiles]),
-    [couch_file:delete(get_view_dir(Db),File,false)||File <- DeleteFiles],
+    [couch_file:delete(get_view_dir(couch_db:name(Db)),File,false)||File <- DeleteFiles],
     ok.
 
 list_index_files(Db) ->
     % call server to fetch the index files
-    RootDir = get_view_dir(Db),
+    RootDir = get_view_dir(couch_db:name(Db)),
     ?LOG_DEBUG("RootDir ~s, Db ~p, couch_db:name ~s, foo: ~s",
         [RootDir, Db, couch_db:name(Db), RootDir ++ "/." ++ ?b2l(couch_db:name(Db)) ++ "_design"++"/*"]),
     filelib:wildcard(RootDir ++ "/." ++ ?b2l(couch_db:name(Db)) ++ "_design"++"/*").
