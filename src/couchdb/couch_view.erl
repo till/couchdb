@@ -120,7 +120,6 @@ cleanup_index_files(Db) ->
     [couch_file:delete(get_view_dir(Db),File,false)||File <- DeleteFiles],
     ok.
 
-% TODO: need to rework this with per view directories
 list_index_files(Db) ->
     % call server to fetch the index files
     RootDir = get_view_dir(Db),
