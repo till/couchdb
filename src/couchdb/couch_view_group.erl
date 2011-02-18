@@ -429,7 +429,7 @@ hex_sig(GroupSig) ->
     couch_util:to_hex(?b2l(GroupSig)).
 
 design_root(RootDir, DbName) ->
-    couch_config:get("view_storage", "view_" ++ DbName, RootDir) ++ "/." ++ ?b2l(DbName) ++ "_design/".
+    couch_config:get("view_storage", "view_" ++ ?b2l(DbName), RootDir) ++ "/." ++ ?b2l(DbName) ++ "_design/".
 
 index_file_name(RootDir, DbName, GroupSig) ->
     design_root(RootDir, DbName) ++ hex_sig(GroupSig) ++".view".
